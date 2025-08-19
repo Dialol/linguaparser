@@ -196,3 +196,68 @@ button:hover, .btn:hover {
     background-color: #007bff;
     color: white;
 }
+
+/* Таблица слов */
+.words-table {
+    margin: 20px 0;
+    overflow-x: auto;
+}
+
+.words-table table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.words-table th {
+    background-color: #007bff;
+    color: white;
+    padding: 15px;
+    text-align: left;
+    font-weight: bold;
+}
+
+.words-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.words-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.word-cell {
+    font-weight: bold;
+    color: #333;
+}
+
+.translation-input {
+    width: 200px;
+    margin-right: 10px;
+}
+
+.edit-form, .delete-form {
+    display: inline;
+}
+
+.btn.small {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.btn.danger {
+    background-color: #dc3545;
+}
+
+.btn.danger:hover {
+    background-color: #c82333;
+}
+
+.no-words {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}

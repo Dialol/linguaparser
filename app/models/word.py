@@ -17,7 +17,8 @@ class Word(Base):
             Index('idx_word_unique', 'word', unique=True),
             )
 
-    user_words = relationship("UserWord", back_populates="word")
+    user_words = relationship("UserWord", back_populates="word",
+                              cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Word(id={self.id}, word='{self.word}', translation='{self.translation}')>"
