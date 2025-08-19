@@ -320,3 +320,24 @@ button:hover, .btn:hover {
     color: #155724;
     margin-bottom: 15px;
 }
+
+.study-controls {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.study-controls .btn {
+    margin: 0 10px;
+}
+
+.study-actions {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.study-actions .btn {
+    font-size: 16px;
+    padding: 12px 24px;
+}

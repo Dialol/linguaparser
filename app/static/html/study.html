@@ -43,6 +43,11 @@
             </div>
             {% endfor %}
         </div>
+        
+        <div class="study-actions">
+            <button onclick="refreshCards()" class="btn secondary">Обновить список слов</button>
+        </div>
+        
         {% else %}
         <div class="no-cards">
             <p>Нет слов для изучения.</p>
@@ -53,7 +58,9 @@
 
     <script>
         let currentCardIndex = 0;
+        let cardsViewed = 0;  // Счетчик просмотренных карточек
         const totalCards = {{ total_cards }};
+        const maxCardsPerSession = 2;  // Максимум карточек за сессию
         
         function showTranslation(cardId, action) {
             // Скрываем слово, показываем перевод
@@ -79,17 +86,27 @@
         }
         
         function nextCard(currentCardId) {
+            // Увеличиваем счетчик просмотренных карточек
+            cardsViewed++;
+            
             // Скрываем текущую карточку
             document.getElementById(`card-${currentCardId}`).style.display = 'none';
             
-            // Показываем следующую
+            // Проверяем лимит
+            if (cardsViewed >= maxCardsPerSession) {
+                // Достигли лимита - обновляем страницу
+                console.log('Достигнут лимит карточек, обновляем страницу');
+                window.location.reload();
+                return;
+            }
+            
+            // Показываем следующую карточку
             currentCardIndex++;
             if (currentCardIndex < totalCards) {
-                // Показываем следующую карточку
                 const nextCard = document.querySelectorAll('.study-card')[currentCardIndex];
                 nextCard.style.display = 'block';
                 
-                // Сбрасываем состояние карточки (показываем слово, скрываем перевод)
+                // Сбрасываем состояние карточки
                 const wordDiv = nextCard.querySelector('.word-only');
                 const translationDiv = nextCard.querySelector('.translation-view');
                 wordDiv.style.display = 'block';
@@ -99,6 +116,11 @@
                 document.querySelector('.study-cards').innerHTML = 
                     '<div class="study-complete"><h3> Изучение завершено!</h3><p>Все карточки пройдены.</p></div>';
             }
+        }
+        
+        function refreshCards() {
+            // Ручное обновление списка
+            window.location.reload();
         }
     </script>
 </body>
