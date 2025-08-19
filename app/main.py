@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from app.core.config import settings
 from app.core.database import Base, engine
 from app.api.routes import router
@@ -12,6 +14,7 @@ app = FastAPI(
         )
 
 Base.metadata.create_all(bind=engine)
+templates = Jinja2Templates(directory="app/static/html")
 
 app.add_middleware(
         CORSMiddleware,
@@ -22,12 +25,7 @@ app.add_middleware(
         )
 
 
-app.include_router(router, prefix="/api/v1")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.include_router(router)
 
-@app.get("/")
-def read_root():
-    return {"message": "LinguaParser API", "version": "1.0.0"}
 
-@app.get("/health")
-def health_check():
-    return {"status": "healthy"}

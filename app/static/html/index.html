@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinguaParser - Парсинг</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        {% include 'navbar.html' %}
+        <h1>LinguaParser - Парсинг текста и URL</h1>
+        
+        <div class="form-section">
+            <h3>Парсинг по URL</h3>
+            <form action="/parse" method="post">
+                <label for="url">Введите URL сайта:</label>
+                <input 
+                    type="text" 
+                    id="url" 
+                    name="url" 
+                    placeholder="example.com или https://example.com"
+                />
+                <button type="submit">Парсить URL</button>
+            </form>
+        </div>
+
+        <div class="form-section">
+            <h3>Парсинг текста</h3>
+            <form action="/parse" method="post">
+                <label for="text">Введите текст:</label>
+                <textarea
+                    id="text"
+                    name="text"
+                    placeholder="Например: Hello world, how are you?"
+                    rows="4"
+                ></textarea>
+                <button type="submit">Парсить текст</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

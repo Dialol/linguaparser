@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты парсинга - LinguaParser</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        {% include 'navbar.html' %}
+        <h1>Результаты парсинга</h1>
+        
+        <div class="summary">
+            <p><strong>Источник:</strong> {{ source_message }}</p>
+            <p><strong>Всего слов:</strong> {{ total_count }}</p>
+            <p><strong>Новых слов добавлено:</strong> {{ added_count }}</p>
+            <p><strong>Уже было в базе:</strong> {{ existing_count }}</p>
+        </div>
+
+        {% if added_words %}
+        <h3>Добавленные слова:</h3>
+        <div class="words-grid">
+            {% for word in added_words %}
+            <div class="word-card">
+                <div class="word">{{ word }}</div>
+                <div class="translation">{{ translations.get(word, 'Перевод не найден') }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if existing_words %}
+        <h3>Уже изученные слова:</h3>
+        <div class="words-grid">
+            {% for word in existing_words %}
+            <div class="word-card">
+                <div class="word">{{ word }}</div>
+                <div class="translation">{{ translations.get(word, 'Перевод не найден') }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="actions">
+            <a href="/" class="btn">Парсить еще</a>
+        </div>
+    </div>
+</body>
+</html>
