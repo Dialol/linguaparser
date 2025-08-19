@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Изучение слов - LinguaParser</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        {% include 'navbar.html' %}
+        
+        <h1>Изучение слов</h1>
+        
+        {% if message %}
+        <div class="info-message">
+            {{ message }}
+        </div>
+        {% endif %}
+        
+        {% if cards %}
+        <div class="study-cards">
+            {% for card in cards %}
+            <div class="study-card" id="card-{{ card.id }}" {% if not loop.first %}style="display: none;"{% endif %}>
+                <!-- Сначала показываем только слово -->
+                <div class="card-content word-only" id="word-{{ card.id }}">
+                    <div class="word">{{ card.word }}</div>
+                    <div class="card-actions">
+                        <button onclick="showTranslation({{ card.id }}, 'know')" class="btn success">Знаю</button>
+                        <button onclick="showTranslation({{ card.id }}, 'dont_know')" class="btn danger">Не знаю</button>
+                        <button onclick="showTranslation({{ card.id }}, 'remove')" class="btn secondary">Выучил</button>
+                    </div>
+                </div>
+                
+                <!-- После ответа показываем перевод -->
+                <div class="card-content translation-view" id="translation-{{ card.id }}" style="display: none;">
+                    <div class="word">{{ card.word }}</div>
+                    <div class="translation">{{ card.translation }}</div>
+                    <div class="card-actions">
+                        <button onclick="nextCard({{ card.id }})" class="btn primary">Следующая карточка</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-cards">
+            <p>Нет слов для изучения.</p>
+            <p><a href="/">Добавьте слова через парсинг</a></p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        let currentCardIndex = 0;
+        const totalCards = {{ total_cards }};
+        
+        function showTranslation(cardId, action) {
+            // Скрываем слово, показываем перевод
+            document.getElementById(`word-${cardId}`).style.display = 'none';
+            document.getElementById(`translation-${cardId}`).style.display = 'block';
+            
+            // Отправляем ответ на сервер
+            updateProgress(cardId, action);
+        }
+        
+        function updateProgress(cardId, action) {
+            const formData = new FormData();
+            formData.append('action', action);
+            
+            fetch(`/study/progress/${cardId}`, {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    console.log('Прогресс обновлен');
+                }
+            });
+        }
+        
+        function nextCard(currentCardId) {
+            // Скрываем текущую карточку
+            document.getElementById(`card-${currentCardId}`).style.display = 'none';
+            
+            // Показываем следующую
+            currentCardIndex++;
+            if (currentCardIndex < totalCards) {
+                // Показываем следующую карточку
+                const nextCard = document.querySelectorAll('.study-card')[currentCardIndex];
+                nextCard.style.display = 'block';
+                
+                // Сбрасываем состояние карточки (показываем слово, скрываем перевод)
+                const wordDiv = nextCard.querySelector('.word-only');
+                const translationDiv = nextCard.querySelector('.translation-view');
+                wordDiv.style.display = 'block';
+                translationDiv.style.display = 'none';
+            } else {
+                // Все карточки пройдены
+                document.querySelector('.study-cards').innerHTML = 
+                    '<div class="study-complete"><h3> Изучение завершено!</h3><p>Все карточки пройдены.</p></div>';
+            }
+        }
+    </script>
+</body>
+</html>

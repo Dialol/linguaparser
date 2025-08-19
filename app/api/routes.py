@@ -6,6 +6,7 @@ from app.services.parser import TextParser
 from app.services.translator import TranslationService
 from app.services.learning import LearningService
 from app.models.word import Word
+from app.models.user_word import UserWord
 from app.core.database import get_db
 from sqlalchemy.orm import Session
 
@@ -115,12 +116,21 @@ async def update_word_progress(
 @router.get("/words")
 async def words_page(request: Request, db: Session = Depends(get_db)):
     """Страница управления всеми словами"""
-    words = db.query(Word).order_by(Word.word).all()
+    words_with_scores = db.query(Word, UserWord.score).outerjoin(UserWord).order_by(Word.word).all()
+    
+    words_data = []
+    for word, score in words_with_scores:
+        words_data.append({
+            'id': word.id,
+            'word': word.word,
+            'translation': word.translation,
+            'score': score if score is not None else 0.0
+        })
     
     return templates.TemplateResponse("words.html", {
         "request": request,
-        "words": words,
-        "total_words": len(words)
+        "words": words_data,
+        "total_words": len(words_data)
     })
 
 
@@ -152,3 +162,28 @@ async def edit_word(
         return RedirectResponse(url="/words", status_code=303)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка редактирования: {str(e)}")
+
+
+@router.post("/words/{word_id}/score")
+async def update_word_score(
+    word_id: int,
+    score: float = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Обновляет рейтинг слова"""
+    try:
+        user_word = db.query(UserWord).filter(UserWord.word_id == word_id).first()
+        
+        if not user_word:
+            user_word = UserWord(word_id=word_id, score=0.0)
+            db.add(user_word)
+        
+        user_word.score = float(score)
+        db.commit()
+        
+        return RedirectResponse(url="/words", status_code=303)
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Ошибка обновления рейтинга: {str(e)}")
+
