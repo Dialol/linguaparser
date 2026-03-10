@@ -2,9 +2,13 @@ fastapi
 uvicorn
 sqlalchemy
 psycopg2-binary
+pydantic-settings
+python-multipart
+jinja2
 requests
 beautifulsoup4
-pydantic
-python-dotenv
-googletrans
+deep-translator
+httpx
+python-jose[cryptography]
 alembic
+

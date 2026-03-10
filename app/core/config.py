@@ -11,7 +11,10 @@ class Settings(BaseSettings):
     port: int = 8000
 
     translation_cache_size: int = 1000
-
+    
+    keycloak_url: str = "http://localhost:7001"
+    keycloak_realm: str = "demo"
+    keycloak_client_id: str = "linguaparser-client"
     class Config:
         env_file = ".env"
         case_sensitive = False

@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
+from app.core.auth import get_current_user
 from app.services.parser import TextParser
 from app.services.translator import TranslationService
 from app.services.learning import LearningService
@@ -29,7 +30,8 @@ async def parse_content(
     request: Request,
     url: Optional[str] = Form(None), 
     text: Optional[str] = Form(None), 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     """Парсит текст/URL, добавляет новые слова в базу, показывает результат"""
     if not url and not text:
@@ -77,7 +79,10 @@ async def parse_content(
 
 
 @router.get("/study")
-async def study_page(request: Request, db: Session = Depends(get_db)):
+async def study_page(
+        request: Request, 
+        db: Session = Depends(get_db),
+        current_user: dict = Depends(get_current_user),):
     """Страница обучения с карточками"""
     cards = learning_service.get_study_session(db)
     
@@ -100,7 +105,8 @@ async def study_page(request: Request, db: Session = Depends(get_db)):
 async def update_word_progress(
     word_id: int,
     action: str = Form(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     """Обновляет прогресс изучения слова"""
     if action not in ["know", "dont_know", "remove"]:
@@ -114,7 +120,10 @@ async def update_word_progress(
 
 
 @router.get("/words")
-async def words_page(request: Request, db: Session = Depends(get_db)):
+async def words_page(
+        request: Request,
+        db: Session = Depends(get_db),
+        current_user: dict = Depends(get_current_user),):
     """Страница управления всеми словами"""
     words_with_scores = db.query(Word, UserWord.score).outerjoin(UserWord).order_by(Word.word).all()
     
@@ -135,7 +144,10 @@ async def words_page(request: Request, db: Session = Depends(get_db)):
 
 
 @router.post("/words/{word_id}/delete")
-async def delete_word(word_id: int, db: Session = Depends(get_db)):
+async def delete_word(
+        word_id: int,
+        db: Session = Depends(get_db),
+        current_user: dict = Depends(get_current_user),):
     """Удаляет слово из базы"""
     try:
         word = db.query(Word).filter(Word.id == word_id).first()
@@ -151,7 +163,8 @@ async def delete_word(word_id: int, db: Session = Depends(get_db)):
 async def edit_word(
     word_id: int,
     translation: str = Form(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     """Редактирует перевод слова"""
     try:
@@ -168,7 +181,8 @@ async def edit_word(
 async def update_word_score(
     word_id: int,
     score: float = Form(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     """Обновляет рейтинг слова"""
     try:
