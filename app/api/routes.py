@@ -6,6 +6,7 @@ from app.core.auth import get_current_user
 from app.services.parser import TextParser
 from app.services.translator import TranslationService
 from app.services.learning import LearningService
+from app.services.users import get_or_create_user
 from app.models.word import Word
 from app.models.user_word import UserWord
 from app.core.database import get_db
@@ -31,7 +32,6 @@ async def parse_content(
     url: Optional[str] = Form(None), 
     text: Optional[str] = Form(None), 
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
 ):
     """Парсит текст/URL, добавляет новые слова в базу, показывает результат"""
     if not url and not text:
@@ -84,7 +84,10 @@ async def study_page(
         db: Session = Depends(get_db),
         current_user: dict = Depends(get_current_user),):
     """Страница обучения с карточками"""
-    cards = learning_service.get_study_session(db)
+
+    db_user = get_or_create_user(db, current_user)
+
+    cards = learning_service.get_study_session(db, db_user.id)
     
     if not cards:
         return templates.TemplateResponse("study.html", {
@@ -125,7 +128,16 @@ async def words_page(
         db: Session = Depends(get_db),
         current_user: dict = Depends(get_current_user),):
     """Страница управления всеми словами"""
-    words_with_scores = db.query(Word, UserWord.score).outerjoin(UserWord).order_by(Word.word).all()
+    db_user = get_or_create_user(db, current_user)
+    words_with_scores = (
+            db.query(Word, UserWord.score)
+            .outerjoin(
+                UserWord,
+                (UserWord.word_id == Word.id) & (UserWord.user_id == db_user.id),
+                )
+            .order_by(Word.word)
+            .all()
+            )
     
     words_data = []
     for word, score in words_with_scores:
@@ -150,10 +162,16 @@ async def delete_word(
         current_user: dict = Depends(get_current_user),):
     """Удаляет слово из базы"""
     try:
-        word = db.query(Word).filter(Word.id == word_id).first()
-        if word:
-            db.delete(word)
+        db_user = get_or_create_user(db, current_user)
+        user_word = (
+        db.query(UserWord)
+        .filter(UserWord.user_id == db_user.id, UserWord.word_id == word_id)
+        .first()
+        )
+        if user_word:
+            db.delete(user_word)
             db.commit()
+
         return RedirectResponse(url="/words", status_code=303)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка удаления: {str(e)}")
@@ -168,7 +186,14 @@ async def edit_word(
 ):
     """Редактирует перевод слова"""
     try:
-        word = db.query(Word).filter(Word.id == word_id).first()
+        db_user = get_or_create_user(db, current_user)
+        word = (
+                db.query(Word)
+                .join(UserWord, UserWord.word_id == Word.id)
+                .filter(UserWord.user_id == db_user.id,
+                        Word.id == word_id)
+                .first()
+                )
         if word:
             word.translation = translation.strip()
             db.commit()
@@ -186,12 +211,18 @@ async def update_word_score(
 ):
     """Обновляет рейтинг слова"""
     try:
-        user_word = db.query(UserWord).filter(UserWord.word_id == word_id).first()
+        db_user = get_or_create_user(db, current_user)
+        user_word = (
+                db.query(UserWord)
+                .filter(UserWord.user_id == db_user.id, 
+                        UserWord.word_id == word_id)
+                .first()
+                )
         
         if not user_word:
-            user_word = UserWord(word_id=word_id, score=0.0)
+            user_word = UserWord(user_id=db_user.id, word_id=word_id, score=0.0)
             db.add(user_word)
-        
+         
         user_word.score = float(score)
         db.commit()
         

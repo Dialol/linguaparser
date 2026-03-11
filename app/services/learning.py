@@ -17,16 +17,21 @@ class LearningService:
         self.cards_per_session = 10
         self.release_threshold = 7
 
-    def get_study_session(self, db: Session) -> List[Dict]:
+    def get_study_session(self, db: Session, user_id: int) -> List[Dict]:
         """Получает 10 слов для изучения"""
         
-        active_words = db.query(UserWord).filter(
+        active_words = (
+            db.query(UserWord)
+            .filter(
+                UserWord.user_id == user_id,
                 UserWord.score < self.release_threshold
-                ).all()
+                )
+            .all()
+        )
 
         if len(active_words) < self.cards_per_session:
             needed = self.cards_per_session - len(active_words)
-            new_words = self._get_new_words(db, needed)
+            new_words = self._get_new_words(db, user_id, needed)
             active_words.extend(new_words)
 
         random.shuffle(active_words)
@@ -46,30 +51,49 @@ class LearningService:
 
         return cards
 
-    def _get_new_words(self, db: Session, count: int) -> List[UserWord]:
+    def _get_new_words(
+            self,
+            db: Session,
+            user_id: int,
+            count: int
+            ) -> List[UserWord]:
         """Добавляет новые слова в изучение"""
-
-        new_words = db.query(Word).outerjoin(UserWord).filter(
-                UserWord.id.is_(None)
-                ).limit(count).all()
+        new_words = (
+                db.query(Word)
+                .outerjoin(
+                    UserWord,
+                    (UserWord.word_id == Word.id) & (UserWord.user_id == user_id),
+                    )
+                .filter(UserWord.id.is_(None))
+                .limit(count)
+                .all()
+                )
+        
         
         user_words = []
         for word in new_words:
-            user_word = UserWord(word_id=word.id, score=0)
+            user_word = UserWord(user_id=user_id, word_id=word.id, score=0)
             db.add(user_word)
             user_words.append(user_word)
 
         db.commit()
         return user_words
     
-    def update_progress(self, db: Session, word_id: int, action: str) -> Dict:
+    def update_progress(
+            self,
+            db: Session,
+            user_id: int,
+            word_id: int,
+            action: str
+            ) -> Dict:
         """Обновляет прогресс изучения слова"""
         user_word = db.query(UserWord).filter(
+                UserWord.user_id == user_id,
                 UserWord.word_id == word_id
                 ).first()
 
         if not user_word:
-            user_word = UserWord(word_id=word_id, score=0)
+            user_word = UserWord(user_id=user_id, word_id=word_id, score=0)
             db.add(user_word)
 
         if action == "know":

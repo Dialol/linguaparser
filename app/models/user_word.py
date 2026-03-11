@@ -8,10 +8,12 @@ class UserWord(Base):
     __tablename__ = "user_words"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     word_id = Column(Integer, ForeignKey("words.id"), nullable=False)
     score = Column(Float, default=0.0, nullable=False)
     last_reviewed = Column(DateTime(timezone=True), server_default=func.now())
 
+    user = relationship("User", back_populates="user_words")
     word = relationship("Word", back_populates="user_words")
 
     def __repr__(self):
