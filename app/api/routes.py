@@ -32,6 +32,7 @@ async def parse_content(
     url: Optional[str] = Form(None), 
     text: Optional[str] = Form(None), 
     db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     """Парсит текст/URL, добавляет новые слова в базу, показывает результат"""
     if not url and not text:
@@ -62,7 +63,25 @@ async def parse_content(
             added_words.append(word)
         
         db.commit()
-        
+
+        db_user = get_or_create_user(db, current_user)
+
+        added_word_ids = (
+                db.query(Word.id)
+                .filter(Word.word.in_(added_words))
+                .all()
+                )
+
+        for (word_id,) in added_word_ids:
+            existing = db.query(UserWord).filter(
+                    UserWord.user_id == db_user.id,
+                    UserWord.word_id == word_id
+                    ).first()
+            if not existing:
+                db.add(UserWord(user_id=db_user.id, word_id=word_id, score=0.0))
+
+        db.commit()
+
         return templates.TemplateResponse("results.html", {
             "request": request,
             "source_message": source_message,
@@ -116,7 +135,8 @@ async def update_word_progress(
         raise HTTPException(status_code=400, detail="Неизвестное действие")
     
     try:
-        learning_service.update_progress(db, word_id, action)
+        db_user = get_or_create_user(db, current_user)
+        learning_service.update_progress(db, db_user.id, word_id, action)
         return RedirectResponse(url="/study", status_code=303)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка обновления: {str(e)}")

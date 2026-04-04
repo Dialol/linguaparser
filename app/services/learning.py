@@ -37,10 +37,20 @@ class LearningService:
         random.shuffle(active_words)
 
         session_words = active_words[:self.cards_per_session]
+        
+        words_ids = [uw.word_id for uw in session_words]
+
+        words = (
+                db.query(Word)
+                .filter(Word.id.in_(words_ids))
+                .all()
+                )
+
+        words_by_id = {word.id: word for word in words}
 
         cards = []
         for user_word in session_words:
-            word = db.query(Word).filter(Word.id == user_word.word_id).first()
+            word = words_by_id.get(user_word.word_id)
             if word:
                 cards.append({
                     "id": word.id,
