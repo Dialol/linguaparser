@@ -50,25 +50,11 @@ async def parse_content(
 
         translations = translator.translate_words(words, db)
         
-        existing_words_query = db.query(Word.word).filter(Word.word.in_(words)).all()
-        existing_words = [w[0] for w in existing_words_query]
-        
-        new_words = [w for w in words if w not in existing_words]
-        
-        added_words = []
-        for word in new_words:
-            translation = translations.get(word, "Перевод не найден")
-            new_word = Word(word=word, translation=translation)
-            db.add(new_word)
-            added_words.append(word)
-        
-        db.commit()
-
         db_user = get_or_create_user(db, current_user)
 
         added_word_ids = (
                 db.query(Word.id)
-                .filter(Word.word.in_(added_words))
+                .filter(Word.word.in_(words))
                 .all()
                 )
 
@@ -85,12 +71,8 @@ async def parse_content(
         return templates.TemplateResponse("results.html", {
             "request": request,
             "source_message": source_message,
-            "added_words": added_words,
-            "existing_words": existing_words,
             "translations": translations,
             "total_count": len(words),
-            "added_count": len(added_words),
-            "existing_count": len(existing_words)
         })
         
     except Exception as e:
