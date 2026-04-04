@@ -1,6 +1,0 @@
-version: '3.8'
-
-services:
-  app:
-    command: ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "app.main:app", "--bind", "0.0.0.0:8000"]
-    volumes: []
