@@ -12,6 +12,10 @@ class Settings(BaseSettings):
 
     translation_cache_size: int = 1000
     
+    postgres_db: str = "linguaparser"
+    postgres_user: str = "linguaparser"
+    postgres_password: str="linguaparser_password"
+
     keycloak_url: str = "http://localhost:7001"
     keycloak_realm: str = "demo"
     keycloak_client_id: str = "linguaparser-client"

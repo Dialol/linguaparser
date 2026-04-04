@@ -4,14 +4,36 @@ services:
   postgres:
     image: postgres:15
     container_name: linguaparser_postgres
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: linguaparser
-      POSTGRES_USER: linguaparser
-      POSTGRES_PASSWORD: linguaparser_password
+      POSTGRES_DB: ${POSTGRES_DB} 
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: linguaparser_app
+    env_file:
+      - .env
+    ports:
+      - "8001:8000"
+    volumes:
+      - .:/app
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
