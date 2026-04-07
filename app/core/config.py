@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     keycloak_url: str = "http://localhost:7001"
     keycloak_realm: str = "demo"
     keycloak_client_id: str = "linguaparser-client"
+    keycloak_issuer: str | None = None
     class Config:
         env_file = ".env"
         case_sensitive = False

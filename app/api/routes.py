@@ -70,12 +70,15 @@ async def parse_content(
 
         db.commit()
 
-        return templates.TemplateResponse("results.html", {
-            "request": request,
-            "source_message": source_message,
-            "translations": translations,
-            "total_count": len(words),
-        })
+        return templates.TemplateResponse(
+                request=request,
+                name="results.html",
+                context={
+                    "source_message": source_message,
+                    "translations": translations,
+                    "total_count": len(words),
+                    }
+                )
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка парсинга: {str(e)}")
@@ -93,18 +96,24 @@ async def study_page(
     cards = learning_service.get_study_session(db, db_user.id)
     
     if not cards:
-        return templates.TemplateResponse("study.html", {
-            "request": request,
-            "cards": [],
-            "total_cards": 0,
-            "message": "Нет слов для изучения. Сначала добавьте слова через парсинг."
-        })
+        return templates.TemplateResponse(
+                request=request,
+                name="study.html",
+                context={
+                    "cards": [],
+                    "total_cards": 0,
+                    "message": "Нет слов для изучения. Сначала добавьте слова через парсинг."
+                    },
+            )
     
-    return templates.TemplateResponse("study.html", {
-        "request": request,
-        "cards": cards,
-        "total_cards": len(cards)
-    })
+    return templates.TemplateResponse(
+            request=request,
+            name="study.html",
+            context={
+                "cards": cards,
+                "total_cards": len(cards),
+                },
+            )
 
 
 @router.post("/study/progress/{word_id}")
@@ -152,8 +161,10 @@ async def words_page(
             'score': score if score is not None else 0.0
         })
     
-    return templates.TemplateResponse("words.html", {
-        "request": request,
+    return templates.TemplateResponse(
+            request=request,
+            name="words.html",
+            context={
         "words": words_data,
         "total_words": len(words_data)
     })

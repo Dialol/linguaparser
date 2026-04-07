@@ -9,7 +9,7 @@ JWKS_URL = (
     f"{settings.keycloak_url}/realms/{settings.keycloak_realm}/protocol/"
     "openid-connect/certs"
 )
-ISSUER = f"{settings.keycloak_url}/realms/{settings.keycloak_realm}"
+ISSUER = settings.keycloak_issuer or f"{settings.keycloak_url}/realms/{settings.keycloak_realm}"
 
 
 def extract_bearer_token(authorization: str | None) -> str:
